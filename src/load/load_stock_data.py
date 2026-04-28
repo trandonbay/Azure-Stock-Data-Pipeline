@@ -35,7 +35,7 @@ else:
 # Load processed data
 raw_stock_data = extract_stock_data()
 for ticker in stocks:
-    processed_stock_data = transform_stock_data(raw_stock_data[ticker], ticker)
+    processed_stock_data = transform_stock_data(raw_stock_data[ticker], ticker).to_csv(index=False)
     blob_name = f"processed/symbol={ticker}/date={date_str}/data.csv"
     blob_client = blob_service_client.get_blob_client(
         container=container_name,

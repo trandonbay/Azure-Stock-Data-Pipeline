@@ -16,15 +16,22 @@ def transform_stock_data(df, ticker):
     df["date"] = df["date"].astype(str)
     df["date_id"] = df["date"].str.replace("-", "").astype(int)
 
+    df.rename(columns={
+        "open": "open_price",
+        "high": "high_price",
+        "low": "low_price",
+        "close": "close_price"
+    }, inplace=True)
+
     df["stock_id"] = stocks_mapping[ticker]
 
     df = df[[
         "date_id",
         "stock_id",
-        "open",
-        "high",
-        "low",
-        "close",
+        "open_price",
+        "high_price",
+        "low_price",
+        "close_price",
         "volume"
     ]]
 
@@ -32,7 +39,7 @@ def transform_stock_data(df, ticker):
 
 # if __name__ == "__main__":
 #     raw_df = extract_stock_data()
-    # print(transform_stock_data(raw_df["NVDA"], "NVDA"))
+#     print(transform_stock_data(raw_df["NVDA"], "NVDA"))
     # print(stocks)
 
     # for ticker in stocks:
