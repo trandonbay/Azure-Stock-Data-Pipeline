@@ -1,31 +1,32 @@
-from src.extract.extract_stock_data import extract_stock_data
-import os
-from dotenv import load_dotenv
+from config.loader import load_config
+import pandas as pd
 
-stocks = os.getenv("MAG_SEVEN")
-stocks = stocks.split(", ")
+def transform_stock_data(df: pd.DataFrame, ticker: str, mapping: dict) -> pd.DataFrame:
+    # Retrieve DataFrame for specific stock
+    try:
+        df_ticker = df.xs(ticker, axis=1, level=1).copy()
+    except KeyError:
+        df_ticker = df.xs(ticker, axis=1, level=0).copy()
+    
+    df_ticker.reset_index(inplace=True)
+    df_ticker.columns = [col.lower() for col in df_ticker.columns]
 
-stocks_mapping = {}
-for i in range(len(stocks)):
-    stocks_mapping[stocks[i]] = i+1
+    # Date handling
+    df_ticker["date"] = pd.to_datetime(df_ticker["date"])
+    df_ticker["date_id"] = df_ticker["date"].dt.strftime("%Y%m%d").astype(int)
 
-def transform_stock_data(df, ticker):
-    df.reset_index(inplace=True)
-    df.columns = [col.lower() for col in df.columns]
-
-    df["date"] = df["date"].astype(str)
-    df["date_id"] = df["date"].str.replace("-", "").astype(int)
-
-    df.rename(columns={
+    # Rename columns
+    df_ticker.rename(columns={
         "open": "open_price",
         "high": "high_price",
         "low": "low_price",
         "close": "close_price"
     }, inplace=True)
 
-    df["stock_id"] = stocks_mapping[ticker]
+    # Map stocks to ID
+    df_ticker["stock_id"] = mapping[ticker]
 
-    df = df[[
+    df_ticker = df_ticker[[
         "date_id",
         "stock_id",
         "open_price",
@@ -35,12 +36,19 @@ def transform_stock_data(df, ticker):
         "volume"
     ]]
 
-    return df
+    return df_ticker
 
 # if __name__ == "__main__":
-#     raw_df = extract_stock_data()
-#     print(transform_stock_data(raw_df["NVDA"], "NVDA"))
-    # print(stocks)
+#     from src.extract.extract_stock_data import extract_stock_data
+#     stocks = load_config("stocks")["mag7"]
+#     raw_df = extract_stock_data(stocks, "2026-04-20", "2026-04-25")
+
+#     stocks_mapping = {}
+#     for i in range(len(stocks)):
+#         stocks_mapping[stocks[i]] = i+1
+
+#     processed_df = transform_stock_data(raw_df, "AAPL", stocks_mapping)
+#     print(processed_df)
 
     # for ticker in stocks:
     #     processed_df = transform_stock_data(raw_df[ticker], ticker)
